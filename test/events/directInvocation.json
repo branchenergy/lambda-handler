@@ -1,0 +1,9 @@
+{
+    "direct_invocation": {
+        "trigger": "my-trigger",
+        "body": "Matthew",
+        "meta": null
+    },
+    "time_stamp": "2022/01/01 12:34:56",
+    "source": "Somewhere"
+}
