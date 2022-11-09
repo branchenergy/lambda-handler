@@ -1,0 +1,27 @@
+site_name: Lambda Handler
+site_url: https://https://branchenergy.github.io/lambda_handler
+theme: material
+site_dir: public
+nav:
+  - Home: index.md
+  - LambdaHandler: handler.md
+  - Event Models: event_models.md
+plugins:
+  - autorefs
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append("lambda_handler")
+          options:
+            docstring_style: numpy
+            show_root_heading: true
+            show_root_full_path: false
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+watch:
+  - lambda_handler
