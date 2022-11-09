@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lambda-handler"
-version = "0.1.0"
+version = "1.0.0"
 description = "A Python package for routing and validating AWS events inside a Lambda function"
 authors = ["Matthew Badger <matt@branchenergy.com>"]
 license = "Apache 2.0"
