@@ -8,7 +8,10 @@ event classes, for handling API Gateway events from a range of sources, in parti
 - SQS queues
 - SNS topics
 
-## Usage
+When not using the optional FastAPI support (see below), the package's only dependency
+is pydantic.
+
+## Use
 
 ```python
 from aws_lambda_handler import (
@@ -75,4 +78,74 @@ def index():
     return "Hello, World!"
 
 handler.fastapi_app = app
+```
+
+FastAPI support requires the package to be installed with optional extras:
+`pip install "lambda-handler[fastapi]"`, and is built on top of the existing
+[Mangum](https://mangum.io/) package.
+
+## Model Validation
+
+The `*Event` models lambda-handler defines use [pydantic](pydantic-docs.helpmanual.io/)
+for parsing and validation, and these models are _generic_. This means that you can
+pass a type argument to the class when defining your function, and it will correctly
+parse the content of the event (see below) to that type. If this is confusing, it's
+easier to see it in action:
+
+```python
+from lambda_handler import LambdaHandler, SnsEvent, LambdaResponse
+from pydantic import BaseModel
+
+handler = LambdaHandler()
+
+class MyModel(BaseModel):
+    thing: str
+
+@handler.sns(topic_name=topic_name)
+def test_func(event: SnsEvent[MyModel]) -> LambdaResponse:
+    assert isinstance(event.records[0].sns.message, MyModel)
+    return LambdaResponse(status_code="200")
+```
+
+Here, we have parametrised `SnsEvent` with `MyModel` in the signature of `test_func`,
+meaning that the `message` attribute is parsed to a `MyModel` instance in the process.
+
+### Parametrised Event Attributes
+
+The following attributes are those which are parsed to a Pydantic model for each event
+type:
+
+| Event Type              | Parsed Attribute                  |
+|:------------------------|:----------------------------------|
+| `DirectInvocationEvent` | `event.direct_invocation.body`    |
+| `EventBridgeEvent`      | `event.detail`                    |
+| `SnsEvent`              | `event.records[i].sns.message`    |
+| `SqsEvent`              | `event.records[i].body`           |
+
+
+## Dealing with Raw Data
+
+If you don't want to deal with parsed event objects, you can include the `raw=True`
+parameter to any of the wrapping methods of `LambdaHandler` and write a function
+that accepts and returns a `Dict[str, Any]` instead. Note that, in this case, the
+event object will still be parsed by the `AwsEvent` subclasses for identification,
+but the event object will be passed as-is in dictionary format to the function.
+
+```python
+from fastapi import FastAPI
+from aws_lambda_handler import LambdaHandler, SnsEvent, LambdaResponse
+
+from typing import Any, Dict
+
+handler = LambdaHandler()
+
+@handler.sns(topic_name="MyTopic")
+def handle_mytopic(event: SnsEvent) -> LambdaResponse:
+    body = frobincate()
+    return LambdaResponse(status_code=200, body=body)
+
+@handler.sns(topic_name="MyOtherTopic". raw=True)
+def handle_mytopic(event: Dict[str, Any]) -> Dict[str, Any]:
+    body = frobincate()
+    return {"statusCode": "200"}
 ```
