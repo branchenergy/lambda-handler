@@ -12,4 +12,4 @@ from lambda_handler.model import (  # noqa: F401
     SqsEvent,
 )
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
