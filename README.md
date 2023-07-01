@@ -14,7 +14,7 @@ is pydantic.
 ## Use
 
 ```python
-from aws_lambda_handler import (
+from lambda_handler import (
     LambdaHandler,
     EventBridgeEvent,
     SnsEvent,
@@ -45,7 +45,7 @@ HTTP requests. These can be handled by an instance of `FastAPI`, as follows:
 
 ```python
 from fastapi import FastAPI
-from aws_lambda_handler import LambdaHandler
+from lambda_handler import LambdaHandler
 
 app = FastAPI(title="My HTTP handler")
 
@@ -133,7 +133,7 @@ but the event object will be passed as-is in dictionary format to the function.
 
 ```python
 from fastapi import FastAPI
-from aws_lambda_handler import LambdaHandler, SnsEvent, LambdaResponse
+from lambda_handler import LambdaHandler, SnsEvent, LambdaResponse
 
 from typing import Any, Dict
 

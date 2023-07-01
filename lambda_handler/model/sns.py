@@ -96,7 +96,7 @@ class SnsRecord(BranchGenericModel, Generic[DataT]):
     ----------
     event_source : Literal["aws:sns"]
         Event source; must be `"aws:sns"`
-    event_subscription_arn : str
+    event_subscription_arn : str | None = `None`
         Event subscription ARN
     sns : SnsMessage
         Message instance
@@ -104,7 +104,9 @@ class SnsRecord(BranchGenericModel, Generic[DataT]):
 
     event_source: Literal["aws:sns"] = Field(alias="EventSource")
     event_version: str = Field(alias="EventVersion")
-    event_subscription_arn: str = Field(alias="EventSubscriptionARN")
+    event_subscription_arn: str | None = Field(
+        alias="EventSubscriptionARN", default=None
+    )
     sns: SnsMessage[DataT] = Field(alias="Sns")
 
 
