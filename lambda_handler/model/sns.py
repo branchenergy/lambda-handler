@@ -128,7 +128,7 @@ class SnsEvent(AwsEvent, Generic[DataT]):
         str
             Topic name
         """
-        return self.records[0].event_subscription_arn.split(":")[-1]
+        return self.records[0].sns.topic_arn.split(":")[-1]
 
     @property
     def event_key(self) -> str:
