@@ -1,6 +1,25 @@
+[project]
+name = "lambda-handler"
+version = "1.1.0"
+authors = [
+  { name="Matthew Badger", email="matt@branchenergy.com" },
+]
+description = "A Python package for routing and validating AWS events inside a Lambda function"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/branchenergy/lambda_handler"
+"Bug Tracker" = "https://github.com/branchenergy/lambda_handler/issues"
+
 [tool.poetry]
 name = "lambda-handler"
-version = "1.0.1"
+version = "1.1.0"
 description = "A Python package for routing and validating AWS events inside a Lambda function"
 authors = ["Matthew Badger <matt@branchenergy.com>"]
 license = "Apache 2.0"
@@ -49,5 +68,5 @@ disable = [
 addopts = "--cov=lambda_handler --cov-report term-missing"
 
 [build-system]
-requires = ["poetry-core>=1.0.1"]
+requires = ["poetry-core>=1.1.0"]
 build-backend = "poetry.core.masonry.api"
