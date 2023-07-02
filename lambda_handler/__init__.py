@@ -8,6 +8,7 @@ from lambda_handler.model import (  # noqa: F401
     DirectInvocationEvent,
     EventBridgeEvent,
     LambdaResponse,
+    S3Event,
     SnsEvent,
     SqsEvent,
 )
