@@ -1,5 +1,7 @@
 """Defines the main `LambdaHandler` class"""
 
+import re
+
 from lambda_handler.model import (
     ApiGatewayEvent,
     AwsEvent,
@@ -7,6 +9,7 @@ from lambda_handler.model import (
     DirectInvocationEvent,
     EventBridgeEvent,
     LambdaResponse,
+    S3Event,
     SnsEvent,
     SqsEvent,
 )
@@ -46,6 +49,7 @@ _P = ParamSpec("_P")
 VALID_EVENTS = [
     "DirectInvocationEvent",
     "EventBridgeEvent",
+    "S3Event",
     "SqsEvent",
     "SnsEvent",
 ]
@@ -99,10 +103,9 @@ class LambdaHandler(LambdaHandlerInterface):
     """
 
     def __init__(self, fastapi_app: Optional[FastApiInterface] = None):
-
-        self._events_dict: Dict[
-            Tuple[str, str], AwsEventRawCallable
-        ] = OnetimeDictionary()
+        self._events_dict: Dict[Tuple[str, str], AwsEventRawCallable] = (
+            OnetimeDictionary()
+        )
         self._fastapi_app: Optional[FastApiInterface] = None
         self._mangum: Optional[MangumInterface] = None
 
@@ -164,6 +167,39 @@ class LambdaHandler(LambdaHandlerInterface):
         """
         return self._mangum
 
+    def _find_function(
+        self, event_type_name: str, event_key: str
+    ) -> AwsEventRawCallable:
+        """Find the handling function for the given event type and key
+
+        Parameters
+        ----------
+        event_type_name : str
+            Name of the event class
+        event_key : str
+            Event key
+
+        Returns
+        -------
+        AwsEventRawCallable
+            Event handling function
+
+        Raises
+        ------
+        InvalidRouteError
+            If no handling function is found
+        """
+
+        for (event_type, key), func in self._events_dict.items():
+            if event_type == event_type_name:
+                if re.match(key, event_key):
+                    return func
+
+        raise InvalidRouteError(
+            f"No valid route for event type `{event_type_name}` and event key"
+            f" `{event_key}`"
+        )
+
     def process_event(
         self, event: Dict[str, Any], context: LambdaContext
     ) -> Dict[str, Any]:
@@ -190,16 +226,9 @@ class LambdaHandler(LambdaHandlerInterface):
         parsed_event = parse_lambda_event(event)
 
         if not isinstance(parsed_event, ApiGatewayEvent):
-
             event_type_name = type(parsed_event).__qualname__.split("[")[0]
 
-            func = self._events_dict.get((event_type_name, parsed_event.event_key))
-
-            if func is None:
-                raise InvalidRouteError(
-                    f"No valid route for event type `{event_type_name}` "
-                    f"and event key `{parsed_event.event_key}`"
-                )
+            func = self._find_function(event_type_name, parsed_event.event_key)
 
             # The function itself parses the event so we don't need to
             # pass the parsed event
@@ -384,6 +413,59 @@ class LambdaHandler(LambdaHandlerInterface):
             handler=self,
             event_type=EventBridgeEvent,
             event_key=resource_name,
+            raw=raw,
+        )
+
+    @overload
+    def s3(
+        self, event_name: str, raw: Literal[False]
+    ) -> Callable[
+        [Callable[Concatenate[AwsEvent[S3Event], _P], LambdaResponse]],
+        AwsEventRawCallable,
+    ]:
+        ...
+
+    @overload
+    def s3(
+        self, event_name: str, raw: Literal[True]
+    ) -> Callable[
+        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
+        AwsEventRawCallable,
+    ]:
+        ...
+
+    def s3(
+        self, event_name: str, raw: Bool = False
+    ) -> Union[
+        Callable[
+            [Callable[Concatenate[AwsEvent[S3Event], _P], LambdaResponse]],
+            AwsEventRawCallable,
+        ],
+        Callable[
+            [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
+            AwsEventRawCallable,
+        ],
+    ]:
+        """Handles S3 events
+
+        Parameters
+        ----------
+        event_name : str
+            Name of the S3 event, which may be a regular expression such as `ObjectCreated:.*`
+        raw : bool = `False`
+            Indicates that the wrapped function accepts and returns a Dict[str, Any]
+            instead of an `S3Event` and `LambdaResponse`
+
+        Returns
+        -------
+        AwsEventTypedCallable[S3Event]
+            A callable that handles an SqsEvent, or a Dict[str, Any]
+        """
+
+        return create_wrapper(
+            handler=self,
+            event_type=S3Event,
+            event_key=event_name,
             raw=raw,
         )
 
