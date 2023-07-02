@@ -56,39 +56,39 @@ else:
     from pydantic import Json
 
 
-class S3EventRecordGlacierRestoreEventData(BaseModel):
+class S3EventRecordGlacierRestoreEventData(BranchBaseModel):
     lifecycle_restoration_expiry_time: dt.datetime
     lifecycle_restore_storage_class: str
 
 
-class S3EventRecordGlacierEventData(BaseModel):
+class S3EventRecordGlacierEventData(BranchBaseModel):
     restore_event_data: S3EventRecordGlacierRestoreEventData
 
 
-class S3Identity(BaseModel):
+class S3Identity(BranchBaseModel):
     principal_id: str
 
 
-class S3RequestParameters(BaseModel):
+class S3RequestParameters(BranchBaseModel):
     source_ip_address: IPvAnyNetwork = Field(alias="sourceIPAddress")
 
 
-class S3ResponseElements(BaseModel):
+class S3ResponseElements(BranchBaseModel):
     x_amz_request_id: str = Field(None, alias="x-amz-request-id")
     x_amz_id_2: str = Field(None, alias="x-amz-id-2")
 
 
-class S3OwnerIdentify(BaseModel):
+class S3OwnerIdentify(BranchBaseModel):
     principal_id: str
 
 
-class S3Bucket(BaseModel):
+class S3Bucket(BranchBaseModel):
     name: str
     owner_identity: S3OwnerIdentify
     arn: str
 
 
-class S3Object(BaseModel):
+class S3Object(BranchBaseModel):
     key: str
     size: Optional[NonNegativeFloat]
     etag: Optional[str] = Field(alias="eTag")
@@ -96,14 +96,14 @@ class S3Object(BaseModel):
     version_id: Optional[str]
 
 
-class S3Message(BaseModel):
+class S3Message(BranchBaseModel):
     s3_schema_version: str
     configuration_id: str
     bucket: S3Bucket
     object: S3Object  # noqa: A003,VNE003
 
 
-class S3EventNotificationObject(BaseModel):
+class S3EventNotificationObject(BranchBaseModel):
     key: str
     size: Optional[NonNegativeFloat]
     etag: str
@@ -111,11 +111,11 @@ class S3EventNotificationObject(BaseModel):
     sequencer: Optional[str]
 
 
-class S3EventNotificationEventBridgeBucket(BaseModel):
+class S3EventNotificationEventBridgeBucket(BranchBaseModel):
     name: str
 
 
-class S3EventNotificationEventBridgeDetail(BaseModel):
+class S3EventNotificationEventBridgeDetail(BranchBaseModel):
     version: str
     bucket: S3EventNotificationEventBridgeBucket
     object: S3EventNotificationObject  # noqa: A003,VNE003
@@ -147,7 +147,7 @@ class S3EventNotificationEventBridge(BranchBaseModel):
     replay_name: Optional[str] = Field(None, alias="replay-name")
 
 
-class S3Record(BaseModel):
+class S3Record(BranchBaseModel):
     event_version: str
     event_source: Literal["aws:s3"]
     aws_region: str
@@ -169,7 +169,7 @@ class S3Event(AwsEvent):
         List of S3 records
     """
 
-    records: List[S3Record]
+    records: List[S3Record] = Field(alias="Records")
 
     @property
     def event_name(self) -> str:

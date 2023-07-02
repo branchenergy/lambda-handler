@@ -2,6 +2,7 @@
 
 import inspect
 import logging
+import re
 from functools import wraps
 
 from lambda_handler.dependencies import DependencyC
@@ -13,6 +14,7 @@ from lambda_handler.model import (
     DirectInvocationEvent,
     EventBridgeEvent,
     LambdaResponse,
+    S3Event,
     SnsEvent,
     SqsEvent,
 )
@@ -218,7 +220,7 @@ def create_typed_outer(
             }
 
             parsed_event = concrete_event_type.parse_obj(event)
-            if parsed_event.event_key != event_key:
+            if not re.match(event_key, parsed_event.event_key):
                 raise EventKeyMismatch(
                     f"Event key mismatch! `'{parsed_event.event_key}' != '{event_key}'`"
                 )
@@ -350,6 +352,7 @@ def parse_lambda_event(event: Dict[str, Any]) -> AwsEvent:
         ApiGatewayEvent,
         DirectInvocationEvent,
         EventBridgeEvent,
+        S3Event,
         SnsEvent,
         SqsEvent,
     ]
