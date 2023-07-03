@@ -33,8 +33,11 @@ from typing_extensions import Concatenate, ParamSpec, TypeAlias
 
 __all__ = [
     "AwsEventCallable",
-    "OnetimeDictionary",
+    "DictCallable",
     "EventKeyMismatch",
+    "OnetimeDictionary",
+    "TypedCallable",
+    "_P",
     "validate_function_signature",
     "parse_lambda_event",
 ]

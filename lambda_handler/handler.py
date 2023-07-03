@@ -20,7 +20,14 @@ from lambda_handler.types import (
     LambdaHandlerInterface,
     MangumInterface,
 )
-from lambda_handler.utils import OnetimeDictionary, create_wrapper, parse_lambda_event
+from lambda_handler.utils import (
+    OnetimeDictionary,
+    DictCallable,
+    TypedCallable,
+    _P,
+    create_wrapper,
+    parse_lambda_event,
+)
 
 from typing import (
     Any,
@@ -30,7 +37,6 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    TypeVar,
     Union,
     cast,
     overload,
@@ -41,9 +47,6 @@ __all__ = ["InvalidRouteError", "ExistingRouteError", "LambdaHandler"]
 
 
 Bool: TypeAlias = Union[Literal[True], Literal[False]]
-
-_T = TypeVar("_T")
-_P = ParamSpec("_P")
 
 
 VALID_EVENTS = [
@@ -275,36 +278,20 @@ class LambdaHandler(LambdaHandlerInterface):
     @overload
     def direct_invocation(
         self, trigger_name: str, raw: Literal[False] = False
-    ) -> Callable[
-        [Callable[Concatenate[AwsEvent[DirectInvocationEvent], _P], LambdaResponse]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[TypedCallable[DirectInvocationEvent, _P]], AwsEventRawCallable]:
         ...
 
     @overload
     def direct_invocation(
         self, trigger_name: str, raw: Literal[True]
-    ) -> Callable[
-        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[DictCallable], AwsEventRawCallable]:
         ...
 
     def direct_invocation(
         self, trigger_name: str, raw: Bool = False
     ) -> Union[
-        Callable[
-            [
-                Callable[
-                    Concatenate[AwsEvent[DirectInvocationEvent], _P], LambdaResponse
-                ]
-            ],
-            AwsEventRawCallable,
-        ],
-        Callable[
-            [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-            AwsEventRawCallable,
-        ],
+        Callable[[TypedCallable[DirectInvocationEvent, _P]], AwsEventRawCallable],
+        Callable[[DictCallable], AwsEventRawCallable],
     ]:
         """Handles direct invocation events
 
@@ -355,32 +342,20 @@ class LambdaHandler(LambdaHandlerInterface):
     @overload
     def event_bridge(
         self, resource_name: str, raw: Literal[False] = False
-    ) -> Callable[
-        [Callable[Concatenate[AwsEvent[EventBridgeEvent], _P], LambdaResponse]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[TypedCallable[EventBridgeEvent, _P]], AwsEventRawCallable]:
         ...
 
     @overload
     def event_bridge(
         self, resource_name: str, raw: Literal[True]
-    ) -> Callable[
-        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[DictCallable], AwsEventRawCallable]:
         ...
 
     def event_bridge(
         self, resource_name: str, raw: Bool = False
     ) -> Union[
-        Callable[
-            [Callable[Concatenate[AwsEvent[EventBridgeEvent], _P], LambdaResponse]],
-            AwsEventRawCallable,
-        ],
-        Callable[
-            [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-            AwsEventRawCallable,
-        ],
+        Callable[[TypedCallable[EventBridgeEvent, _P]], AwsEventRawCallable],
+        Callable[[DictCallable], AwsEventRawCallable],
     ]:
         """Handles EventBridge events
 
@@ -419,32 +394,20 @@ class LambdaHandler(LambdaHandlerInterface):
     @overload
     def s3(
         self, event_name: str, raw: Literal[False]
-    ) -> Callable[
-        [Callable[Concatenate[AwsEvent[S3Event], _P], LambdaResponse]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[TypedCallable[S3Event, _P]], AwsEventRawCallable]:
         ...
 
     @overload
     def s3(
         self, event_name: str, raw: Literal[True]
-    ) -> Callable[
-        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[DictCallable], AwsEventRawCallable]:
         ...
 
     def s3(
         self, event_name: str, raw: Bool = False
     ) -> Union[
-        Callable[
-            [Callable[Concatenate[AwsEvent[S3Event], _P], LambdaResponse]],
-            AwsEventRawCallable,
-        ],
-        Callable[
-            [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-            AwsEventRawCallable,
-        ],
+        Callable[[TypedCallable[S3Event, _P]], AwsEventRawCallable],
+        Callable[[DictCallable], AwsEventRawCallable],
     ]:
         """Handles S3 events
 
@@ -474,10 +437,7 @@ class LambdaHandler(LambdaHandlerInterface):
         self,
         topic_name: str,
         raw: Literal[False] = False,
-    ) -> Callable[
-        [Callable[Concatenate[SnsEvent[DataT], _P], LambdaResponse]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[TypedCallable[SnsEvent, _P]], AwsEventRawCallable]:
         ...
 
     @overload
@@ -485,23 +445,14 @@ class LambdaHandler(LambdaHandlerInterface):
         self,
         topic_name: str,
         raw: Literal[True],
-    ) -> Callable[
-        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[DictCallable], AwsEventRawCallable]:
         ...
 
     def sns(
         self, topic_name: str, raw: Bool = False
     ) -> Union[
-        Callable[
-            [Callable[Concatenate[SnsEvent[DataT], _P], LambdaResponse]],
-            AwsEventRawCallable,
-        ],
-        Callable[
-            [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-            AwsEventRawCallable,
-        ],
+        Callable[[TypedCallable[SnsEvent, _P]], AwsEventRawCallable],
+        Callable[[DictCallable], AwsEventRawCallable],
     ]:
         """Handles SNS events
 
@@ -529,32 +480,20 @@ class LambdaHandler(LambdaHandlerInterface):
     @overload
     def sqs(
         self, queue_name: str, raw: Literal[False]
-    ) -> Callable[
-        [Callable[Concatenate[AwsEvent[SqsEvent], _P], LambdaResponse]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[TypedCallable[SqsEvent, _P]], AwsEventRawCallable]:
         ...
 
     @overload
     def sqs(
         self, queue_name: str, raw: Literal[True]
-    ) -> Callable[
-        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-        AwsEventRawCallable,
-    ]:
+    ) -> Callable[[DictCallable], AwsEventRawCallable]:
         ...
 
     def sqs(
         self, queue_name: str, raw: Bool = False
     ) -> Union[
-        Callable[
-            [Callable[Concatenate[AwsEvent[SqsEvent], _P], LambdaResponse]],
-            AwsEventRawCallable,
-        ],
-        Callable[
-            [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-            AwsEventRawCallable,
-        ],
+        Callable[[TypedCallable[SqsEvent, _P]], AwsEventRawCallable],
+        Callable[[DictCallable], AwsEventRawCallable],
     ]:
         """Handles SQS events
 
