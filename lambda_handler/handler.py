@@ -5,10 +5,8 @@ import re
 from lambda_handler.model import (
     ApiGatewayEvent,
     AwsEvent,
-    DataT,
     DirectInvocationEvent,
     EventBridgeEvent,
-    LambdaResponse,
     S3Event,
     SnsEvent,
     SqsEvent,
@@ -41,7 +39,7 @@ from typing import (
     cast,
     overload,
 )
-from typing_extensions import Concatenate, ParamSpec, TypeAlias
+from typing_extensions import TypeAlias
 
 __all__ = ["InvalidRouteError", "ExistingRouteError", "LambdaHandler"]
 
@@ -122,7 +120,7 @@ class LambdaHandler(LambdaHandlerInterface):
             except ImportError:
                 raise ImportError(
                     "Cannot import FastAPI and Mangum! Are these installed?"
-                ) from None
+                ) from None  #: noqa
 
             cast(FastAPI, fastapi_app)
             self._fastapi_app = fastapi_app
@@ -422,7 +420,7 @@ class LambdaHandler(LambdaHandlerInterface):
         Returns
         -------
         AwsEventTypedCallable[S3Event]
-            A callable that handles an SqsEvent, or a Dict[str, Any]
+            A callable that handles an S3Event, or a Dict[str, Any]
         """
 
         return create_wrapper(
