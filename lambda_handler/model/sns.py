@@ -104,9 +104,7 @@ class SnsRecord(BranchGenericModel, Generic[DataT]):
 
     event_source: Literal["aws:sns"] = Field(alias="EventSource")
     event_version: str = Field(alias="EventVersion")
-    event_subscription_arn: str | None = Field(
-        alias="EventSubscriptionARN", default=None
-    )
+    event_subscription_arn: str = Field(alias="EventSubscriptionArn")
     sns: SnsMessage[DataT] = Field(alias="Sns")
 
 
@@ -130,7 +128,7 @@ class SnsEvent(AwsEvent, Generic[DataT]):
         str
             Topic name
         """
-        return self.records[0].event_subscription_arn.split(":")[-1]
+        return self.records[0].sns.topic_arn.split(":")[-1]
 
     @property
     def event_key(self) -> str:

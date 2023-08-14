@@ -8,8 +8,9 @@ from lambda_handler.model import (  # noqa: F401
     DirectInvocationEvent,
     EventBridgeEvent,
     LambdaResponse,
+    S3Event,
     SnsEvent,
     SqsEvent,
 )
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"

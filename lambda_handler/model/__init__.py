@@ -10,6 +10,7 @@ from .base import (  # noqa: F401
 from .direct_invocation import DirectInvocationDetail  # noqa: F401
 from .direct_invocation import DirectInvocationEvent
 from .event_bridge import EventBridgeEvent, EventBridgeResource  # noqa: F401
+from .s3 import S3Event, S3Record
 from .sns import SnsEvent, SnsMessage, SnsMsgAttributeModel, SnsRecord  # noqa: F401
 from .sqs import (  # noqa: F401
     SqsEvent,

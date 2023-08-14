@@ -1,11 +1,15 @@
 import pytest
 
+from lambda_handler.dependencies import Dependency
 from lambda_handler.model import AwsEvent, LambdaResponse
 from lambda_handler.utils import OnetimeDictionary, validate_function_signature
 
 
-def test_onetime_dictionary():
+def my_func() -> int:
+    return 1
 
+
+def test_onetime_dictionary():
     d = OnetimeDictionary()
     d[0] = 0
 
@@ -52,13 +56,21 @@ def bad_type_annotation(first: str) -> LambdaResponse:
     ],
 )
 def test_validate_function_signature_params(func, match):
-
     with pytest.raises(ValueError, match=match):
         validate_function_signature(func, AwsEvent)
 
 
 def test_validate_function_signature():
     def correct_types(first: AwsEvent) -> LambdaResponse:
+        pass
+
+    assert validate_function_signature(correct_types, AwsEvent)
+
+
+def test_validate_function_signature_with_dependency():
+    def correct_types(
+        first: AwsEvent, dependency=Dependency(my_func)
+    ) -> LambdaResponse:
         pass
 
     assert validate_function_signature(correct_types, AwsEvent)

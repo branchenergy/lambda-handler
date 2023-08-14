@@ -2,6 +2,7 @@
 
 import inspect
 import logging
+import re
 from functools import wraps
 
 from lambda_handler.dependencies import DependencyC
@@ -13,6 +14,7 @@ from lambda_handler.model import (
     DirectInvocationEvent,
     EventBridgeEvent,
     LambdaResponse,
+    S3Event,
     SnsEvent,
     SqsEvent,
 )
@@ -31,8 +33,11 @@ from typing_extensions import Concatenate, ParamSpec, TypeAlias
 
 __all__ = [
     "AwsEventCallable",
-    "OnetimeDictionary",
+    "DictCallable",
     "EventKeyMismatch",
+    "OnetimeDictionary",
+    "TypedCallable",
+    "_P",
     "validate_function_signature",
     "parse_lambda_event",
 ]
@@ -112,16 +117,15 @@ def validate_function_signature(func: Callable, input_type: Type[AwsEvent]) -> b
 
 
 _P = ParamSpec("_P")
+DictCallable: TypeAlias = Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]
+TypedCallable: TypeAlias = Callable[Concatenate[AwsEventType, _P], LambdaResponse]
 
 
 def create_raw_outer(
     handler: LambdaHandlerInterface,
     event_type: Type[AwsEventType],
     event_key: str,
-) -> Callable[
-    [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-    AwsEventRawCallable,
-]:
+) -> Callable[[DictCallable], AwsEventRawCallable]:
     """Create a wrapper for a function that accepts a `Dict[str, Any]`
     plus dependencies, and returns a `Dict[str, Any]`
 
@@ -136,17 +140,12 @@ def create_raw_outer(
 
     Returns
     -------
-    Callable[
-        [Callable[Concatenate[Dict[str, Any], P], Dict[str, Any]]],
-        Callable[[Dict[str, Any]], Dict[str, Any]],
-    ]
+    Callable[[DictCallable], AwsEventRawCallable]
         A wrapper for a function that accepts a `Dict[str, Any]`
-    plus dependencies, and returns a `Dict[str, Any]`
+        plus dependencies, and returns a `Dict[str, Any]`
     """
 
-    def outer(
-        func: Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]
-    ) -> AwsEventRawCallable:
+    def outer(func: DictCallable) -> AwsEventRawCallable:
         @wraps(func)
         def inner(event: Dict[str, Any]) -> Dict[str, Any]:
             sig = inspect.signature(func)
@@ -168,10 +167,7 @@ def create_typed_outer(
     handler: LambdaHandlerInterface,
     event_type: Type[AwsEventType],
     event_key: str,
-) -> Callable[
-    [Callable[Concatenate[AwsEventType, _P], LambdaResponse]],
-    AwsEventRawCallable,
-]:
+) -> Callable[[TypedCallable], AwsEventRawCallable]:
     """Create the wrapper function for a typed callable
 
     Parameters
@@ -185,13 +181,11 @@ def create_typed_outer(
 
     Returns
     -------
-    Callable[ [Callable[Concatenate[AwsEventType, _P], LambdaResponse]], AwsEventRawCallable, ]
+    Callable[[TypedCallable], AwsEventRawCallable]
         _description_
     """
 
-    def outer(
-        func: Callable[Concatenate[AwsEventType, _P], LambdaResponse]
-    ) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    def outer(func: TypedCallable) -> AwsEventRawCallable:
         @wraps(func)
         def inner(event: Dict[str, Any]) -> Dict[str, Any]:
             """Parses the event to the correct type and passes it to `func`
@@ -218,7 +212,7 @@ def create_typed_outer(
             }
 
             parsed_event = concrete_event_type.parse_obj(event)
-            if parsed_event.event_key != event_key:
+            if not re.match(event_key, parsed_event.event_key):
                 raise EventKeyMismatch(
                     f"Event key mismatch! `'{parsed_event.event_key}' != '{event_key}'`"
                 )
@@ -237,10 +231,7 @@ def create_wrapper(
     event_type: Type[AwsEventType],
     event_key: str,
     raw: Literal[True],
-) -> Callable[
-    [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-    AwsEventRawCallable,
-]:
+) -> Callable[[DictCallable], AwsEventRawCallable]:
     pass
 
 
@@ -250,10 +241,7 @@ def create_wrapper(
     event_type: Type[AwsEventType],
     event_key: str,
     raw: Literal[False],
-) -> Callable[
-    [Callable[Concatenate[AwsEventType, _P], LambdaResponse]],
-    AwsEventRawCallable,
-]:
+) -> Callable[[TypedCallable], AwsEventRawCallable]:
     pass
 
 
@@ -264,14 +252,8 @@ def create_wrapper(
     event_key: str,
     raw: Bool,
 ) -> Union[
-    Callable[
-        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-        AwsEventRawCallable,
-    ],
-    Callable[
-        [Callable[Concatenate[AwsEventType, _P], LambdaResponse]],
-        AwsEventRawCallable,
-    ],
+    Callable[[DictCallable], AwsEventRawCallable],
+    Callable[[TypedCallable], AwsEventRawCallable],
 ]:
     pass
 
@@ -282,14 +264,8 @@ def create_wrapper(
     event_key: str,
     raw: Bool = True,
 ) -> Union[
-    Callable[
-        [Callable[Concatenate[Dict[str, Any], _P], Dict[str, Any]]],
-        AwsEventRawCallable,
-    ],
-    Callable[
-        [Callable[Concatenate[AwsEventType, _P], LambdaResponse]],
-        AwsEventRawCallable,
-    ],
+    Callable[[DictCallable], AwsEventRawCallable],
+    Callable[[TypedCallable], AwsEventRawCallable],
 ]:
     """Create a wrapper for a given event type
 
@@ -308,8 +284,8 @@ def create_wrapper(
     Returns
     -------
     Union[
-        Callable[[AwsEventTypedCallable], AwsEventCallable],
-        Callable[[AwsEventRawCallable], AwsEventRawCallable]
+        Callable[[DictCallable], AwsEventRawCallable],
+        Callable[[TypedCallable], AwsEventRawCallable],
     ]
         A callable that wraps a callable of a given signature and returns
         it
@@ -350,6 +326,7 @@ def parse_lambda_event(event: Dict[str, Any]) -> AwsEvent:
         ApiGatewayEvent,
         DirectInvocationEvent,
         EventBridgeEvent,
+        S3Event,
         SnsEvent,
         SqsEvent,
     ]

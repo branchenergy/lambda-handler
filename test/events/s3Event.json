@@ -1,0 +1,39 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "us-east-1",
+      "eventTime": "2023-07-02T08:23:32.658Z",
+      "eventName": "ObjectCreated:Put",
+      "userIdentity": {
+        "principalId": "AWS:AROA4EMZIC4GEYDY1JU5H:matt@branchenergy.com"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "192.169.0.1"
+      },
+      "responseElements": {
+        "x-amz-request-id": "Q1S06DEEEY7X1DBC",
+        "x-amz-id-2": "DjshJ2yhyqp6/VxKadXpVKnI/P1koFKlIs6lgXCyn+zLe8wYYwBsBd0Ksodd6hSIjAuLqNozR1eDandW0RkNRJi0Eh21ROHs"
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "Object Created",
+        "bucket": {
+          "name": "my-bucket",
+          "ownerIdentity": {
+            "principalId": "HALEPVKMSB39Z"
+          },
+          "arn": "arn:aws:s3:::my-bucket"
+        },
+        "object": {
+          "key": "my_prefix/my_file.csv",
+          "size": 3313,
+          "eTag": "5a78e765ddfba367787334201f9d2851",
+          "versionId": "80PDnOJyHclE2717VBpAfYSV6wZibyvO",
+          "sequencer": "0064A1340494CECCB3"
+        }
+      }
+    }
+  ]
+}

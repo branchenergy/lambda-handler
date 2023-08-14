@@ -1,5 +1,5 @@
 site_name: Lambda Handler
-site_url: https://https://branchenergy.github.io/lambda_handler
+site_url: https://branchenergy.github.io/lambda-handler
 theme: material
 site_dir: public
 nav:

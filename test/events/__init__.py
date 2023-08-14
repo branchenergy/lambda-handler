@@ -5,6 +5,7 @@ from pathlib import Path
 __all__ = [
     "direct_invocation_event_dict",
     "direct_invocation_event_model_dict",
+    "s3_event_dict",
     "sns_event_dict",
     "sns_event_model_dict",
     "another_sns_event_dict",
@@ -13,6 +14,8 @@ __all__ = [
 ]
 
 events_path = Path(__file__).parent
+
+s3_event_dict = json.loads((events_path / "s3Event.json").read_text(encoding="utf-8"))
 
 sns_event_dict = json.loads((events_path / "snsEvent.json").read_text(encoding="utf-8"))
 sns_event_model_dict = json.loads(
